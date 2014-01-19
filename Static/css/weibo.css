@@ -1,0 +1,75 @@
+@CHARSET "GB18030";
+.w620{
+	width:620px;
+}
+.w320{
+	width:320px;
+}
+.l{float:left;}
+.r{float:right;}
+.c{clear:both;}
+#window{
+	width:960px;
+	height:auto;
+	overflow:hidden;
+	margin:0px auto;
+}
+#window .panel-body dl{
+	border-bottom: 1px solid #dedede;
+	padding-bottom:10px;
+}
+#window .panel-body dl dd em{
+	float:right;
+}
+#window .panel-body ul{
+	list-style:none;
+	padding:0px;
+	
+}
+#window .panel-body ul li{
+	padding:5px 0px;
+}
+#window .bottom{
+	width:100%;
+	height:30px;
+	margin:10px 0px;
+	text-align:center;
+}
+#window .bottom img{
+	margin:0px 5px;
+	display:none;
+}
+#window  .loading-span{
+	float:right;
+	background:#FFF;
+	padding:3px;
+	font-size:12px;
+	border:1px solid #dedede;
+	border-radius:2px;
+	display:none;
+}
+#weibo-content{
+	width:100%;
+	height:1000px;
+	overflow:auto;
+}
+#atme-weibo{
+	width:100%;
+	height:488px;
+	overflow:auto;
+}
+#window .queue-box{
+	width:100%;
+	height:278px;
+	overflow:hidden;
+}
+#window .queue-box ol{
+	width:100%;
+	height:auto;
+	overflow:hidden;
+}
+#window .queue-box ol li{
+	width:100%;
+	height:24px;
+	line-height:24px;
+}

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <meta charset="utf-8">
+<meta name="description" content="PHP使用Redis实现一个消息队列的微博DEMO">
+<meta name="keywords" content="Redis使用 php操作redis实例 php消息队列">
+<meta name="author" content="郑印">
+<title>PHP+REDIS应用</title>
+<link href="<?php echo __STATIC__?>/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="<?php echo __STATIC__?>/css/weibo.css" rel="stylesheet">
+<script type="text/javascript">
+var __JSAPP__ = '<?php echo __APP__;?>';
+var __JSROOT__ = '<?php echo __ROOT__;?>';	
+</script>
+</head>
+<body>
+	<div id="window">
+		<div class="page-header">
+		  	<h1>PHP+REDIS应用</h1>
+		  	<p><small>最近看了一些Redis应用场景的文章,所谓实践出真理，故有了此Demo。</small></p>
+		  	<p>
+		  		<a class='btn btn-xs btn-default' target="_blank" href="http://database.51cto.com/art/201107/276333.htm">原文地址</a>
+		  		<a class='btn btn-xs btn-primary' href="">下载此Demo源码</a>
+		  	</p>
+		</div>
+		<div class="panel panel-default w620 l" >
+		   <div class="panel-heading">
+		     <h3 class="panel-title">最近发布的微博 
+		     	<a href="javascript:void(0);" onclick="getNewestWeibo.call(this);" class='btn btn-default btn-xs r'>刷新</a>
+		     	<span class='loading-span'><img width="15" src="<?php echo __STATIC__?>/images/loading1.gif"/>正在加载..</span>
+		     </h3>
+		   </div>
+		   <div class="panel-body" id="weibo-content">
+		   <?php foreach ($data as $v):?>
+		     	<dl>
+					<dt>
+						<?php echo $v['uname'];?>
+						
+					</dt>
+					<dd>
+						<?php echo $v['content'];?>
+						
+					</dd>
+					<dd><?php echo $v['addtime'];?><em>wid:<?php echo $v['wid'];?></em></dd>
+				</dl>	
+			<?php endforeach;?>
+		   </div>
+		   <div class='bottom' id="bottom">
+				<a href="javascript:void(0);" onclick="requestWeibo.call(this)" ><img src="<?php echo __STATIC__?>/images/loading.gif">查看更多</a>
+			</div>
+		</div>
+		
+		<div class="panel panel-default w320 r">
+			
+		   <div class="panel-heading">
+		     <h3 class="panel-title">Hi,<?php echo $_SESSION['user']['uname'];?></h3>
+		   </div>
+		   <div class="panel-body" >
+		   		<ul>
+					<li>你可以通过下面的按钮，发布测试数据！</dt>
+					<form target="_blank" id="sendForm" action="send.php" method="POST">
+					<li>
+						<span>发布</span>
+						<select name="sendNum">
+							<option value="1">20</option>
+							<option value="2">40</option>
+							<option value="3">60</option>
+							<option value="4">80</option>
+							<option value="5">100</option>
+						</select>
+						<span>篇微博</span>
+						<input type="submit" id='sendSubmit' value="Send" class='btn btn-default btn-xs'>
+					</li>
+					</form>
+					<li>脚本执行时间:<em><?php echo round(microtime(true)-STIME,4);?></em>秒</li>
+					<li>发送耗时:<em id="send-time">0</em></li>
+				</ul>
+		   </div>
+		</div>
+		<div class="panel panel-default w320 r">
+			
+		   <div class="panel-heading">
+		     <h3 class="panel-title">队列信息</h3>
+		   </div>
+		   <div class="panel-body queue-box" id="queue-box">
+		   
+		   </div>
+		</div>
+		<div class="panel panel-default w320 r">
+			
+		   <div class="panel-heading">
+		     <h3 class="panel-title">@我的
+		     	<a href="javascript:void(0);" onclick="$('#atme-weibo').find('dl').remove();" class='btn btn-default r btn-xs'>清空</a>
+		     </h3>
+		   </div>
+		   <div class="panel-body" id="atme-weibo">
+		      
+		   </div>
+		</div>
+		<div class="panel panel-default c" >
+		   <div class="panel-heading">
+		     <h3 class="panel-title">DEMO介绍</h3>
+		   </div>
+		   <div class="panel-body"  >
+		     	<dl>
+		     		<dt><h3>功能</h3></dt>
+		     		<dd>
+		     			此Demo使用PHP+REDIS实现一个微博写入消息队列,避免在并发写入时产生过多的Mysql连接，服务器响应慢等问题。
+		     		</dd>
+		     	</dl>
+		     	<dl>
+		     		<dt><h3>流程</h3></dt>
+		     		<dd>
+		     			当你访问该页面是，系统会为你随机分配一个会话用户，比如当前你的会话用户是【<?php echo $_SESSION['user']['uname'];?>】,你可以点击右上角的Send按钮发布测试数据。这时系统会随机组合一些微博内容，使人CURL扩展往"index.php?method=add"添加微博的方法提交请求，这个方法会把POST的数据写入到Redis的微博消息队列中，同时在后台会有一个脚本【WeiboQueue.sh】以守护进程运行,完成把队列中的微博信息，存储进数据库并处理其中微博的用户关系。
+		     		</dd>
+		     	</dl>
+		     	<dl>
+		     		<dt><h3>关于Demo中的异步轮询信息</h3></dt>
+		     		<dt>队列信息轮询</dt>
+		     		<dd>这个模块每10秒读取后台队列处理监控情况。</dd>
+		     		<dt>@我的微博消息轮询</dt>
+		     		<dd>微博内容中@xxx 会被匹配为用户，如果在你发布测试数据时，有@你自己的微博消息，会记录在Redis。这个模块每10秒读取一次@你的微博</dd>
+		     	</dl>
+		   </div>
+		</div>
+		<div class="panel panel-default c" >
+		   <div class="panel-body"  >
+		   		<!-- Duoshuo Comment BEGIN -->
+				<div class="ds-thread" data-thread-key="php-redis-weibo" data-title="PHP+REDIS应用"></div>
+				<script type="text/javascript">
+					var duoshuoQuery = {short_name:"zhengyinblog"};
+						(function() {
+						var ds = document.createElement('script');
+						ds.type = 'text/javascript';ds.async = true;
+						ds.src = 'http://static.duoshuo.com/embed.js';
+						ds.charset = 'UTF-8';
+						(document.getElementsByTagName('head')[0] 
+						|| document.getElementsByTagName('body')[0]).appendChild(ds);
+					})();
+				</script>
+				<!-- Duoshuo Comment END -->
+		   </div>
+	    </div> 	   
+	</div>
+</body>
+<script type="text/javascript" src="<?php echo __STATIC__?>/js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="<?php echo __STATIC__?>/dist/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="<?php echo __STATIC__?>/js/weibo.js"></script>
+</html>
