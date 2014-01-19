@@ -59,7 +59,7 @@ function ajaxInquiry(){
 		complete:function(){
 			setTimeout(function(){
 				ajaxInquiry();
-			},10000)
+			},30000)
 		}
 	})
 }
